@@ -1,53 +1,17 @@
-// import { bomberFrames } from '../assets/loader';
-import * as PIXI from 'pixi.js';
 
-// import bomb from '../assets/images/Bomberman/Back/Bman_B_f00.png';
-// @ts-ignore
-import eggHead from '../assets/images/eggHead.png';
-import flowerTop from '../assets/images/flowerTop.png';
-import helmlok from '../assets/images/helmlok.png';
-import skully from '../assets/images/skully.png';
-//
-// interface BomberFrames {
-//     front: string[];
-//     back: string[];
-//     right: string[];
-//     left:  string[];
-// }
-
-// Prepare frames
-// const playerFrames: BomberFrames = bomberFrames;
-
-// IMPORTANT: Change this value in order to see the Hot Module Reloading!
-// const currentFrame: keyof BomberFrames = 'front';
-
-
-export class GameApp {
-
-    private app: PIXI.Application;
-
-    constructor(parent: HTMLElement, width: number, height: number) {
-
-    }
-
-}
 
 const app = new PIXI.Application({ backgroundColor: 0x1099bb });
-
-console.log("width: " + app.view.width);
-
 document.body.appendChild(app.view);
 
 app.loader
-    .add('examples/assets/eggHead.png', eggHead)
-    .add('examples/assets/flowerTop.png', flowerTop)
-    .add('examples/assets/helmlok.png', helmlok)
-    .add('examples/assets/skully.png', skully)
+    .add('examples/assets/eggHead.png', 'examples/assets/eggHead.png')
+    .add('examples/assets/flowerTop.png', 'examples/assets/flowerTop.png')
+    .add('examples/assets/helmlok.png', 'examples/assets/helmlok.png')
+    .add('examples/assets/skully.png', 'examples/assets/skully.png')
     .load(onAssetsLoaded);
 
 const REEL_WIDTH = 160;
 const SYMBOL_SIZE = 150;
-
 
 // onAssetsLoaded handler builds the example.
 function onAssetsLoaded() {
@@ -150,13 +114,11 @@ function onAssetsLoaded() {
         running = true;
 
         for (let i = 0; i < reels.length; i++) {
-            const reel = reels[i];
+            const r = reels[i];
             const extra = Math.floor(Math.random() * 3);
-            const target = reel.position + 10 + i * 5 + extra;
+            const target = r.position + 10 + i * 5 + extra;
             const time = 2500 + i * 600 + extra * 600;
-            tweenTo(reel, 'position', target, time, backout(0.5), null, i === reels.length - 1 ? reelsComplete : null);
-
-            console.log(`${i}: ${reel.position} -> ${target}`);
+            tweenTo(r, 'position', target, time, backout(0.5), null, i === reels.length - 1 ? reelsComplete : null);
         }
     }
 
@@ -167,25 +129,25 @@ function onAssetsLoaded() {
 
     // Listen for animate update.
     app.ticker.add((delta) => {
-        // Update the slots.
+    // Update the slots.
         for (let i = 0; i < reels.length; i++) {
-            const reel = reels[i];
+            const r = reels[i];
             // Update blur filter y amount based on speed.
             // This would be better if calculated with time in mind also. Now blur depends on frame rate.
-            reel.blur.blurY = (reel.position - reel.previousPosition) * 8;
-            reel.previousPosition = reel.position;
+            r.blur.blurY = (r.position - r.previousPosition) * 8;
+            r.previousPosition = r.position;
 
             // Update symbol positions on reel.
-            for (let j = 0; j < reel.symbols.length; j++) {
-                const symbol = reel.symbols[j];
-                const prevY = symbol.y;
-                symbol.y = ((reel.position + j) % reel.symbols.length) * SYMBOL_SIZE - SYMBOL_SIZE;
-                if (symbol.y < 0 && prevY > SYMBOL_SIZE) {
+            for (let j = 0; j < r.symbols.length; j++) {
+                const s = r.symbols[j];
+                const prevy = s.y;
+                s.y = ((r.position + j) % r.symbols.length) * SYMBOL_SIZE - SYMBOL_SIZE;
+                if (s.y < 0 && prevy > SYMBOL_SIZE) {
                     // Detect going over and swap a texture.
                     // This should in proper product be determined from some logical reel.
-                    symbol.texture = slotTextures[Math.floor(Math.random() * slotTextures.length)];
-                    symbol.scale.x = symbol.scale.y = Math.min(SYMBOL_SIZE / symbol.texture.width, SYMBOL_SIZE / symbol.texture.height);
-                    symbol.x = Math.round((SYMBOL_SIZE - symbol.width) / 2);
+                    s.texture = slotTextures[Math.floor(Math.random() * slotTextures.length)];
+                    s.scale.x = s.scale.y = Math.min(SYMBOL_SIZE / s.texture.width, SYMBOL_SIZE / s.texture.height);
+                    s.x = Math.round((SYMBOL_SIZE - s.width) / 2);
                 }
             }
         }
@@ -193,7 +155,7 @@ function onAssetsLoaded() {
 }
 
 // Very simple tweening utility function. This should be replaced with a proper tweening library in a real product.
-const tweens = [];
+const tweening = [];
 function tweenTo(object, property, target, time, easing, onchange, oncomplete) {
     const tween = {
         object,
@@ -207,30 +169,27 @@ function tweenTo(object, property, target, time, easing, onchange, oncomplete) {
         start: Date.now(),
     };
 
-    tweens.push(tween);
+    tweening.push(tween);
     return tween;
 }
 // Listen for animate update.
 app.ticker.add((delta) => {
     const now = Date.now();
     const remove = [];
-    for (let i = 0; i < tweens.length; i++) {
-        const tween = tweens[i];
-        const phase = Math.min(1, (now - tween.start) / tween.time);
+    for (let i = 0; i < tweening.length; i++) {
+        const t = tweening[i];
+        const phase = Math.min(1, (now - t.start) / t.time);
 
-        tween.object[tween.property] = lerp(tween.propertyBeginValue, tween.target, tween.easing(phase));
-
-        if (tween.change) tween.change(tween);
+        t.object[t.property] = lerp(t.propertyBeginValue, t.target, t.easing(phase));
+        if (t.change) t.change(t);
         if (phase === 1) {
-            tween.object[tween.property] = tween.target;
-            if (tween.complete) {
-                tween.complete(tween);
-            }
-            remove.push(tween);
+            t.object[t.property] = t.target;
+            if (t.complete) t.complete(t);
+            remove.push(t);
         }
     }
     for (let i = 0; i < remove.length; i++) {
-        tweens.splice(tweens.indexOf(remove[i]), 1);
+        tweening.splice(tweening.indexOf(remove[i]), 1);
     }
 });
 
