@@ -12,6 +12,7 @@
   "author": "Llorenç Pujol Ferriol",
   "license": "MIT",
   "dependencies": {
+    "fontfaceobserver": "^2.1.0",
     "pixi.js": "~5.3.3"
   },
   "devDependencies": {
