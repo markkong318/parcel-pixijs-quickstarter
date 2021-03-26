@@ -4,5 +4,5 @@
     font-family: '04b03';
     font-style: normal;
     font-weight: normal;
-    src: local('04b03'), url('04B_03__.woff') format('woff');
+    src: local('04b03'), url('./04B_03__.woff') format('woff');
     }
