@@ -1,20 +1,19 @@
 import * as PIXI from 'pixi.js';
 
-import {View} from "../../framework/view";
-import {REEL_WIDTH, SYMBOL_SIZE} from "../util/env";
-import {backout, lerp, tweenTo} from "../util/anime";
-import event from "../util/event";
+import {View} from "../../../framework/view";
+import {REEL_WIDTH, SYMBOL_SIZE} from "../../util/env";
+import {backout, lerp, tweenTo} from "../../util/anime";
+import event from "../../../framework/event";
+import {GameModel} from "../../model/game-model";
 
 export class ReelView extends View {
-  constructor() {
-    super();
-  }
+  private _gameModel: GameModel;
 
-  private foo = [
-    [0, 0, 0, 0],
-    [0, 0, 0, 0],
-    [0, 0, 0, 0]
-  ]
+  constructor(gameModel: GameModel) {
+    super();
+
+    this._gameModel = gameModel;
+  }
 
   public init() {
     const slotTextures = [
@@ -43,8 +42,8 @@ export class ReelView extends View {
       reel.blur.blurY = 0;
       rc.filters = [reel.blur];
 
-      for (let j = 0; j < this.foo[i].length; j++) {
-        const symbol = new PIXI.Sprite(slotTextures[this.foo[i][j]]);
+      for (let j = 0; j < this._gameModel.reels[i].length; j++) {
+        const symbol = new PIXI.Sprite(slotTextures[this._gameModel.reels[i][j]]);
         symbol.y = j * SYMBOL_SIZE;
         symbol.scale.x = symbol.scale.y = Math.min(SYMBOL_SIZE / symbol.width, SYMBOL_SIZE / symbol.height);
         symbol.x = Math.round((SYMBOL_SIZE - symbol.width) / 2);
@@ -62,7 +61,10 @@ export class ReelView extends View {
     let running = false;
 
     function startPlay() {
-      if (running) return;
+      if (running) {
+        return
+      }
+
       running = true;
 
       for (let i = 0; i < reels.length; i++) {
@@ -108,7 +110,10 @@ export class ReelView extends View {
 
         tween.object[tween.property] = lerp(tween.propertyBeginValue, tween.target, tween.easing(phase));
 
-        if (tween.change) tween.change(tween);
+        if (tween.change) {
+          tween.change(tween)
+        }
+
         if (phase === 1) {
           tween.object[tween.property] = tween.target;
           if (tween.complete) {

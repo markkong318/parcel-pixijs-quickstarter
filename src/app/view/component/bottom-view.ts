@@ -1,12 +1,17 @@
 import * as PIXI from 'pixi.js';
 
-import {View} from "../../framework/view";
-import {Button} from "../button";
-import event from "../util/event";
+import {View} from "../../../framework/view";
+import {Button} from "../../button";
+import event from "../../../framework/event";
+import {GameModel} from "../../model/game-model";
 
 export class BottomView extends View {
-  constructor() {
+  private _gameModel: GameModel;
+
+  constructor(gameModel: GameModel) {
     super();
+
+    this._gameModel = gameModel;
   }
 
   public init() {
@@ -31,8 +36,8 @@ export class BottomView extends View {
 
 
     const playText = new Button('Spin');
-    playText.x = Math.round((this.viewWidth - playText.width) / 2);
-    playText.y = Math.round((this.viewHeight - playText.height) / 2);
+    playText.x = Math.round((this.vw - playText.width) / 2);
+    playText.y = Math.round((this.vh - playText.height) / 2);
     playText.interactive = true;
     playText.buttonMode = true;
     playText.addListener('pointerdown', () => {

@@ -1,15 +1,6 @@
 // import { bomberFrames } from '../assets/loader';
 import * as PIXI from 'pixi.js';
 
-
-// import bomb from '../assets/images/Bomberman/Back/Bman_B_f00.png';
-// @ts-ignore
-import eggHead from '../assets/images/eggHead.png';
-// @ts-ignore
-import flowerTop from '../assets/images/flowerTop.png';
-import helmlok from '../assets/images/helmlok.png';
-import skully from '../assets/images/skully.png';
-
 import veggies_1 from '../assets/images/Froots N Veggies_1.png';
 import veggies_4 from '../assets/images/Froots N Veggies_4.png';
 import veggies_11 from '../assets/images/Froots N Veggies_11.png';
@@ -20,7 +11,6 @@ import veggies_17 from '../assets/images/Froots N Veggies_17.png';
 import {Button} from "./button";
 
 export class GameApp {
-
   private app: PIXI.Application;
 
   constructor(parent: HTMLElement, width: number, height: number) {

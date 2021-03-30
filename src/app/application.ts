@@ -6,10 +6,14 @@ import veggies_11 from '../assets/images/Froots N Veggies_11.png';
 import veggies_13 from '../assets/images/Froots N Veggies_13.png';
 import veggies_17 from '../assets/images/Froots N Veggies_17.png';
 import {GameView} from "./view/game-view";
+import {GameModel} from "./model/game-model";
+import {GameController} from "./controller/game-controller";
 
 
 export class Application extends PIXI.Application {
-  private _gameView;
+  private _gameModel: GameModel;
+  private _gameController: GameController;
+  private _gameView: GameView;
 
   constructor(options?) {
     super(options);
@@ -34,16 +38,14 @@ export class Application extends PIXI.Application {
   }
 
   public initScene(): void {
-    console.log(this.stage)
-    console.log(this.renderer)
+    this._gameModel = new GameModel();
 
-    this._gameView = new GameView();
-    this._gameView.viewWidth = this.renderer.width;
-    this._gameView.viewHeight = this.renderer.height;
+    this._gameController = new GameController(this._gameModel);
+
+    this._gameView = new GameView(this._gameModel);
+    this._gameView.vw = this.renderer.width;
+    this._gameView.vh = this.renderer.height;
     this._gameView.init();
-
-
-    console.log("TOP: " + this.renderer.width)
 
     this.stage.addChild(this._gameView);
   }
