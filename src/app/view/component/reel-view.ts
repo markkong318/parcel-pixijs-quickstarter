@@ -1,10 +1,11 @@
 import * as PIXI from 'pixi.js';
 
 import {View} from "../../../framework/view";
+import event from "../../../framework/event";
 import {REEL_WIDTH, SYMBOL_SIZE} from "../../util/env";
 import {backout, lerp, tweenTo} from "../../util/anime";
-import event from "../../../framework/event";
 import {GameModel} from "../../model/game-model";
+import {EVENT_RENDER_REELS, EVENT_UPDATE_REELS_AFTER} from "../../util/event";
 
 export class ReelView extends View {
   private _gameModel: GameModel;
@@ -44,7 +45,7 @@ export class ReelView extends View {
 
       for (let j = 0; j < this._gameModel.reels[i].length; j++) {
         const symbol = new PIXI.Sprite(slotTextures[this._gameModel.reels[i][j]]);
-        symbol.y = j * SYMBOL_SIZE;
+        symbol.y = j * SYMBOL_SIZE - SYMBOL_SIZE;
         symbol.scale.x = symbol.scale.y = Math.min(SYMBOL_SIZE / symbol.width, SYMBOL_SIZE / symbol.height);
         symbol.x = Math.round((SYMBOL_SIZE - symbol.width) / 2);
         reel.symbols.push(symbol);
@@ -60,18 +61,19 @@ export class ReelView extends View {
 
     let running = false;
 
-    function startPlay() {
+    const startPlay = () => {
       if (running) {
-        return
+        return;
       }
 
       running = true;
 
       for (let i = 0; i < reels.length; i++) {
         const reel = reels[i];
-        const extra = Math.floor(Math.random() * 3);
-        const target = reel.position + 10 + i * 5 + extra;
-        const time = 2500 + i * 600 + extra * 600;
+        reel.position = 0;
+
+        const target = this._gameModel.rolls[i].length;
+        const time = 2500 + i * 600;
         tweenTo(tweens, reel, 'position', target, time, backout(0.5), null, i === reels.length - 1 ? reelsComplete : null);
 
         console.log(`${i}: ${reel.position} -> ${target}`);
@@ -80,6 +82,7 @@ export class ReelView extends View {
 
     function reelsComplete() {
       running = false;
+      event.emit(EVENT_UPDATE_REELS_AFTER);
     }
 
     PIXI.Ticker.shared.add((delta) => {
@@ -92,10 +95,15 @@ export class ReelView extends View {
           const symbol = reel.symbols[j];
           const prevY = symbol.y;
           symbol.y = ((reel.position + j) % reel.symbols.length) * SYMBOL_SIZE - SYMBOL_SIZE;
-          if (symbol.y < 0 && prevY > SYMBOL_SIZE) {
-            symbol.texture = slotTextures[0];
+          if (symbol.y < 0 && prevY > (SYMBOL_SIZE * (reel.symbols.length - 1) - SYMBOL_SIZE)) {
+            if (i == 2) {
+              console.log("j: " + j + ",y:" + symbol.y + ", prevY: " +prevY+ ", position:" + reel.position + " , left:" + this._gameModel.rolls[i].length)
+            }
+
+            symbol.texture = slotTextures[this._gameModel.rolls[i].shift()];
             symbol.scale.x = symbol.scale.y = Math.min(SYMBOL_SIZE / symbol.texture.width, SYMBOL_SIZE / symbol.texture.height);
             symbol.x = Math.round((SYMBOL_SIZE - symbol.width) / 2);
+            console.log(this._gameModel.rolls);
           }
         }
       }
@@ -127,7 +135,7 @@ export class ReelView extends View {
       }
     });
 
-    event.on('play', () => {
+    event.on(EVENT_RENDER_REELS, () => {
       startPlay();
     });
   }

@@ -4,6 +4,7 @@ import {View} from "../../../framework/view";
 import {Button} from "../../button";
 import event from "../../../framework/event";
 import {GameModel} from "../../model/game-model";
+import {EVENT_CLICK_PLAY} from "../../util/event";
 
 export class BottomView extends View {
   private _gameModel: GameModel;
@@ -41,7 +42,7 @@ export class BottomView extends View {
     playText.interactive = true;
     playText.buttonMode = true;
     playText.addListener('pointerdown', () => {
-      event.emit('play');
+      event.emit(EVENT_CLICK_PLAY);
     });
     this.addChild(playText);
   }
