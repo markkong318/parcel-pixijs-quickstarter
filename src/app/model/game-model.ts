@@ -18,6 +18,8 @@ export class GameModel extends Model {
     [],
   ];
 
+  private _lineIds: number[] = [];
+
   constructor() {
     super();
 
@@ -82,5 +84,13 @@ export class GameModel extends Model {
 
   public get rolls() {
     return this._rolls;
+  }
+
+  public set lineIds(lineIds: number[]) {
+    this._lineIds = lineIds;
+  }
+
+  public get lineIds() {
+    return this._lineIds;
   }
 }

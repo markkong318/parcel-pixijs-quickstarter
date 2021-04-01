@@ -5,10 +5,24 @@ import event from "../../../framework/event";
 import {REEL_WIDTH, SYMBOL_SIZE} from "../../util/env";
 import {backout, lerp, tweenTo} from "../../util/anime";
 import {GameModel} from "../../model/game-model";
-import {EVENT_RENDER_REELS, EVENT_UPDATE_REELS_AFTER} from "../../util/event";
+import {EVENT_RENDER_REELS, EVENT_RENDER_SCORE, EVENT_UPDATE_REELS_AFTER} from "../../util/event";
+import {
+  LINE_COLUMN_1,
+  LINE_COLUMN_2,
+  LINE_COLUMN_3,
+  LINE_DIAGONAL_1, LINE_DIAGONAL_2,
+  LINE_ROW_1,
+  LINE_ROW_2,
+  LINE_ROW_3
+} from "../../util/line";
 
 export class ReelView extends View {
   private _gameModel: GameModel;
+
+  private _running: boolean = false;
+  private _tweens: any = [];
+  private _reels: any = [];
+  private _graphics: PIXI.Graphics;
 
   constructor(gameModel: GameModel) {
     super();
@@ -25,23 +39,24 @@ export class ReelView extends View {
       PIXI.Texture.from('veggies_17'),
     ];
 
-    const reels = [];
-    const reelContainer = new PIXI.Container();
+    this._reels = [];
+    const reelContainers = new PIXI.Container();
     for (let i = 0; i < 3; i++) {
-      const rc = new PIXI.Container();
-      rc.x = i * REEL_WIDTH;
-      reelContainer.addChild(rc);
+      const reelContainer = new PIXI.Container();
+      reelContainer.x = i * REEL_WIDTH;
+      reelContainers.addChild(reelContainer);
 
       const reel = {
-        container: rc,
+        container: reelContainer,
         symbols: [],
         position: 0,
         previousPosition: 0,
         blur: new PIXI.filters.BlurFilter(),
       };
+
       reel.blur.blurX = 0;
       reel.blur.blurY = 0;
-      rc.filters = [reel.blur];
+      reelContainer.filters = [reel.blur];
 
       for (let j = 0; j < this._gameModel.reels[i].length; j++) {
         const symbol = new PIXI.Sprite(slotTextures[this._gameModel.reels[i][j]]);
@@ -49,45 +64,23 @@ export class ReelView extends View {
         symbol.scale.x = symbol.scale.y = Math.min(SYMBOL_SIZE / symbol.width, SYMBOL_SIZE / symbol.height);
         symbol.x = Math.round((SYMBOL_SIZE - symbol.width) / 2);
         reel.symbols.push(symbol);
-        rc.addChild(symbol);
+        reelContainer.addChild(symbol);
       }
 
-      reels.push(reel);
+      this._reels.push(reel);
     }
 
-    this.addChild(reelContainer);
+    this.addChild(reelContainers);
 
-    const tweens = [];
+    this._graphics = new PIXI.Graphics();
+    this.addChild(this._graphics);
 
-    let running = false;
-
-    const startPlay = () => {
-      if (running) {
-        return;
-      }
-
-      running = true;
-
-      for (let i = 0; i < reels.length; i++) {
-        const reel = reels[i];
-        reel.position = 0;
-
-        const target = this._gameModel.rolls[i].length;
-        const time = 2500 + i * 600;
-        tweenTo(tweens, reel, 'position', target, time, backout(0.5), null, i === reels.length - 1 ? reelsComplete : null);
-
-        console.log(`${i}: ${reel.position} -> ${target}`);
-      }
-    }
-
-    function reelsComplete() {
-      running = false;
-      event.emit(EVENT_UPDATE_REELS_AFTER);
-    }
+    this._tweens = [];
+    this._running = false;
 
     PIXI.Ticker.shared.add((delta) => {
-      for (let i = 0; i < reels.length; i++) {
-        const reel = reels[i];
+      for (let i = 0; i < this._reels.length; i++) {
+        const reel = this._reels[i];
         reel.blur.blurY = (reel.position - reel.previousPosition) * 8;
         reel.previousPosition = reel.position;
 
@@ -112,8 +105,8 @@ export class ReelView extends View {
     PIXI.Ticker.shared.add((delta) => {
       const now = Date.now();
       const remove = [];
-      for (let i = 0; i < tweens.length; i++) {
-        const tween = tweens[i];
+      for (let i = 0; i < this._tweens.length; i++) {
+        const tween = this._tweens[i];
         const phase = Math.min(1, (now - tween.start) / tween.time);
 
         tween.object[tween.property] = lerp(tween.propertyBeginValue, tween.target, tween.easing(phase));
@@ -131,12 +124,135 @@ export class ReelView extends View {
         }
       }
       for (let i = 0; i < remove.length; i++) {
-        tweens.splice(tweens.indexOf(remove[i]), 1);
+        this._tweens.splice(this._tweens.indexOf(remove[i]), 1);
       }
     });
 
     event.on(EVENT_RENDER_REELS, () => {
-      startPlay();
+      this.renderReels();
     });
+
+    event.on(EVENT_RENDER_SCORE, () => {
+      this.renderScore();
+    })
+  }
+
+  public renderReels() {
+    console.log('render reels')
+    console.log("this._running:" + this._running)
+    if (this._running) {
+      return;
+    }
+
+    this._running = true;
+
+    for (let i = 0; i < this._reels.length; i++) {
+      const reel = this._reels[i];
+      reel.position = 0;
+
+      const target = this._gameModel.rolls[i].length;
+      const time = 2500 + i * 600;
+      tweenTo(this._tweens, reel, 'position', target, time, backout(0.5), null, i === this._reels.length - 1 ? this.renderReelsComplete.bind(this) : null);
+
+      console.log(`${i}: ${reel.position} -> ${target}`);
+    }
+  }
+
+  public renderReelsComplete() {
+    console.log('renderReelsComplete')
+    this._running = false;
+    event.emit(EVENT_UPDATE_REELS_AFTER);
+  }
+
+  public renderScore() {
+    this._graphics.clear()
+
+    const lineIds = this._gameModel.lineIds;
+
+    for (let i = 0; i < lineIds.length; i++) {
+      const lineId = lineIds[i];
+
+      switch (lineId) {
+        case LINE_ROW_1:
+          this._graphics.lineStyle(7, 0xffffff);
+          this._graphics.moveTo(-1, SYMBOL_SIZE / 2 + 1);
+          this._graphics.lineTo(REEL_WIDTH  * 3 - 1, SYMBOL_SIZE / 2 + 1);
+
+          this._graphics.lineStyle(5, 0xfa5c5c);
+          this._graphics.moveTo(0, SYMBOL_SIZE / 2);
+          this._graphics.lineTo(REEL_WIDTH  * 3, SYMBOL_SIZE / 2);
+          break;
+
+        case LINE_ROW_2:
+          this._graphics.lineStyle(7, 0xffffff);
+          this._graphics.moveTo(-1, SYMBOL_SIZE * 3 / 2 + 1);
+          this._graphics.lineTo(REEL_WIDTH  * 3 - 1, SYMBOL_SIZE * 3 / 2 + 1);
+
+          this._graphics.lineStyle(5, 0xfa5c5c);
+          this._graphics.moveTo(0, SYMBOL_SIZE * 3 / 2);
+          this._graphics.lineTo(REEL_WIDTH  * 3, SYMBOL_SIZE * 3 / 2);
+          break;
+
+        case LINE_ROW_3:
+          this._graphics.lineStyle(7, 0xffffff);
+          this._graphics.moveTo(-1, SYMBOL_SIZE * 5 / 2 + 1);
+          this._graphics.lineTo(REEL_WIDTH  * 3 - 1, SYMBOL_SIZE * 5 / 2 + 1);
+
+          this._graphics.lineStyle(5, 0xfa5c5c);
+          this._graphics.moveTo(0, SYMBOL_SIZE * 5 / 2);
+          this._graphics.lineTo(REEL_WIDTH  * 3, SYMBOL_SIZE * 5 / 2);
+          break;
+
+        case LINE_COLUMN_1:
+          this._graphics.lineStyle(7, 0xffffff);
+          this._graphics.moveTo(REEL_WIDTH / 2 - 1, - 1);
+          this._graphics.lineTo(REEL_WIDTH / 2 - 1, SYMBOL_SIZE * 3 - 1);
+
+          this._graphics.lineStyle(5, 0xfa5c5c);
+          this._graphics.moveTo(REEL_WIDTH / 2, 0);
+          this._graphics.lineTo(REEL_WIDTH / 2, SYMBOL_SIZE * 3);
+          break;
+
+        case LINE_COLUMN_2:
+          this._graphics.lineStyle(7, 0xffffff);
+          this._graphics.moveTo(REEL_WIDTH * 3 / 2 - 1, - 1);
+          this._graphics.lineTo(REEL_WIDTH * 3 / 2 - 1, SYMBOL_SIZE * 3 - 1);
+
+          this._graphics.lineStyle(5, 0xfa5c5c);
+          this._graphics.moveTo(REEL_WIDTH * 3 / 2, 0);
+          this._graphics.lineTo(REEL_WIDTH * 3 / 2, SYMBOL_SIZE * 3);
+          break;
+
+        case LINE_COLUMN_3:
+          this._graphics.lineStyle(7, 0xffffff);
+          this._graphics.moveTo(REEL_WIDTH * 5 / 2 - 1, - 1);
+          this._graphics.lineTo(REEL_WIDTH * 5 / 2 - 1, SYMBOL_SIZE * 3 - 1);
+
+          this._graphics.lineStyle(5, 0xfa5c5c);
+          this._graphics.moveTo(REEL_WIDTH * 5 / 2, 0);
+          this._graphics.lineTo(REEL_WIDTH * 5 / 2, SYMBOL_SIZE * 3);
+          break;
+
+        case LINE_DIAGONAL_1:
+          this._graphics.lineStyle(7, 0xffffff);
+          this._graphics.moveTo(- 1, - 1);
+          this._graphics.lineTo(REEL_WIDTH * 3 - 1, SYMBOL_SIZE * 3 - 1);
+
+          this._graphics.lineStyle(5, 0xfa5c5c);
+          this._graphics.moveTo(-1, -1);
+          this._graphics.lineTo(REEL_WIDTH * 3 - 1, SYMBOL_SIZE * 3 - 1);
+          break;
+
+        case LINE_DIAGONAL_2:
+          this._graphics.lineStyle(7, 0xffffff);
+          this._graphics.moveTo(REEL_WIDTH * 3 - 1, - 1);
+          this._graphics.lineTo(-1, SYMBOL_SIZE * 3 - 1);
+
+          this._graphics.lineStyle(5, 0xfa5c5c);
+          this._graphics.moveTo(REEL_WIDTH * 3 - 1, - 1);
+          this._graphics.lineTo(-1, SYMBOL_SIZE * 3 - 1);
+          break;
+      }
+    }
   }
 }

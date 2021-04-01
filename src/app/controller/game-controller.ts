@@ -4,11 +4,12 @@ import event from "../../framework/event";
 import {ONE_PLAY_BET} from "../util/env";
 import {
   EVENT_CLICK_PLAY,
-  EVENT_RENDER_REELS,
+  EVENT_RENDER_REELS, EVENT_RENDER_SCORE,
   EVENT_UPDATE_BET,
   EVENT_UPDATE_REELS,
   EVENT_UPDATE_REELS_AFTER, EVENT_UPDATE_SCORE
 } from "../util/event";
+import {LINE_COLUMN, LINE_DIAGONAL_1, LINE_DIAGONAL_2, LINE_ROW} from "../util/line";
 
 export class GameController extends Controller {
   private _gameModel: GameModel;
@@ -19,6 +20,7 @@ export class GameController extends Controller {
     this._gameModel = gameModel;
 
     event.on(EVENT_CLICK_PLAY, () => {
+      console.log('ev click play')
       event.emit(EVENT_UPDATE_REELS);
     });
 
@@ -37,7 +39,8 @@ export class GameController extends Controller {
     });
 
     event.on(EVENT_UPDATE_SCORE, () => {
-
+      this.updateScore();
+      event.emit(EVENT_RENDER_SCORE);
     });
   }
 
@@ -87,6 +90,72 @@ export class GameController extends Controller {
   }
 
   public updateScore() {
+    const lineIds = [];
 
+    for (let i = 0; i < this._gameModel.reels.length; i++) {
+      let match = true;
+
+      for (let j = 0; j < this._gameModel.reels[i].length - 1; j++) {
+        if (this._gameModel.reels[i][j] != this._gameModel.reels[i][j + 1]) {
+          match = false;
+          break;
+        }
+      }
+
+      if (!match) {
+        continue;
+      }
+
+      lineIds.push(LINE_COLUMN[i]);
+    }
+
+    for (let i = 0; i < this._gameModel.reels[0].length; i++) {
+      let match = true;
+
+      for (let j = 0; j < this._gameModel.reels.length - 1; j++) {
+        if (this._gameModel.reels[j][i] != this._gameModel.reels[j + 1][i]) {
+          match = false;
+          break;
+        }
+      }
+
+      if (!match) {
+        continue;
+      }
+
+      lineIds.push(LINE_ROW[i]);
+    }
+
+    let matchDiagonalLeft = true;
+    let matchDiagonalRight = true;
+    for (let i = 0; i < this._gameModel.reels.length - 1; i++) {
+      if (this._gameModel.reels[i][i] != this._gameModel.reels[i + 1][i + 1]) {
+        matchDiagonalLeft = false;
+        break;
+      }
+    }
+
+    if (matchDiagonalLeft) {
+      lineIds.push(LINE_DIAGONAL_1);
+    }
+
+    for (let i = 0; i < this._gameModel.reels.length - 1; i++) {
+      if (this._gameModel.reels[i][this._gameModel.reels.length - i] != this._gameModel.reels[i + 1][this._gameModel.reels.length - i - 1]) {
+        matchDiagonalRight = false;
+        break;
+      }
+    }
+
+    if (matchDiagonalRight) {
+      lineIds.push(LINE_DIAGONAL_2);
+    }
+
+    this._gameModel.lineIds = [...lineIds];
+
+    console.log('lineIds:');
+    console.log(lineIds);
+
+    this._gameModel.scoreGain = lineIds.length * 10;
+    this._gameModel.score += this._gameModel.scoreGain;
   }
 }
