@@ -4,10 +4,10 @@ import event from "../../framework/event";
 import {ONE_PLAY_BET} from "../util/env";
 import {
   EVENT_CLICK_PLAY,
-  EVENT_RENDER_REELS, EVENT_RENDER_SCORE,
-  EVENT_UPDATE_BET,
-  EVENT_UPDATE_REELS,
-  EVENT_UPDATE_REELS_AFTER, EVENT_UPDATE_SCORE
+  EVENT_RENDER_PREPARE_PLAY,
+  EVENT_RENDER_AFTER_PLAY,
+  EVENT_PREPARE_PLAY,
+  EVENT_AFTER_PLAY,
 } from "../util/event";
 import {LINE_COLUMN, LINE_DIAGONAL_1, LINE_DIAGONAL_2, LINE_ROW} from "../util/line";
 
@@ -20,32 +20,38 @@ export class GameController extends Controller {
     this._gameModel = gameModel;
 
     event.on(EVENT_CLICK_PLAY, () => {
-      console.log('ev click play')
-      event.emit(EVENT_UPDATE_REELS);
+      console.log("playing: " + this._gameModel.playing)
+      if (this.isPlaying()) {
+        console.log('playing')
+        return;
+      }
+      event.emit(EVENT_PREPARE_PLAY);
     });
 
-    event.on(EVENT_UPDATE_REELS, () => {
+    event.on(EVENT_PREPARE_PLAY, () => {
+      this.clear();
+      this.consumeBet();
       this.updateReels();
-      event.emit(EVENT_RENDER_REELS);
+      event.emit(EVENT_RENDER_PREPARE_PLAY);
     });
 
-    event.on(EVENT_UPDATE_REELS_AFTER, () => {
+    event.on(EVENT_AFTER_PLAY, () => {
       this.updateReelsAfter();
-      event.emit(EVENT_UPDATE_SCORE);
-    });
-
-    event.on(EVENT_UPDATE_BET, () => {
-
-    });
-
-    event.on(EVENT_UPDATE_SCORE, () => {
-      this.updateScore();
-      event.emit(EVENT_RENDER_SCORE);
+      this.updateResult();
+      this.clickDone();
+      event.emit(EVENT_RENDER_AFTER_PLAY);
     });
   }
 
-  public clickPlay() {
+  public isPlaying() {
+    if (this._gameModel.playing) {
+      return true;
+    }
     this._gameModel.playing = true;
+  }
+
+  public clickDone() {
+    this._gameModel.playing = false;
   }
 
   public updateReels() {
@@ -74,7 +80,7 @@ export class GameController extends Controller {
 
     for (let i = 0; i < this._gameModel.reels.length; i++) {
       const reel = []
-      for (let j = this._gameModel.reels[i].length - 2 ; j >= this._gameModel.reels[i].length - 4; j--) {
+      for (let j = this._gameModel.reels[i].length - 2; j >= this._gameModel.reels[i].length - 4; j--) {
         reel.push(this._gameModel.reels[i][j]);
       }
 
@@ -84,12 +90,16 @@ export class GameController extends Controller {
     }
   }
 
-  public updateBet() {
+  public consumeBet() {
     this._gameModel.bet -= ONE_PLAY_BET;
-    this._gameModel.scoreGain = -ONE_PLAY_BET;
+    this._gameModel.betGain = -ONE_PLAY_BET;
   }
 
-  public updateScore() {
+  public clear() {
+    this._gameModel.lineIds = [];
+  }
+
+  public updateResult() {
     const lineIds = [];
 
     for (let i = 0; i < this._gameModel.reels.length; i++) {
@@ -140,7 +150,8 @@ export class GameController extends Controller {
     }
 
     for (let i = 0; i < this._gameModel.reels.length - 1; i++) {
-      if (this._gameModel.reels[i][this._gameModel.reels.length - i] != this._gameModel.reels[i + 1][this._gameModel.reels.length - i - 1]) {
+      console.log(i + ", " + (this._gameModel.reels.length - 1 - i) +":: " + (i + 1) + ", " + (this._gameModel.reels.length - 1 - i - 1))
+      if (this._gameModel.reels[i][this._gameModel.reels.length - 1 - i] != this._gameModel.reels[i + 1][this._gameModel.reels.length - 1- i - 1]) {
         matchDiagonalRight = false;
         break;
       }
@@ -155,7 +166,10 @@ export class GameController extends Controller {
     console.log('lineIds:');
     console.log(lineIds);
 
-    this._gameModel.scoreGain = lineIds.length * 10;
+    this._gameModel.scoreGain = lineIds.length * lineIds.length * 3 * 10;
     this._gameModel.score += this._gameModel.scoreGain;
+
+    this._gameModel.betGain = lineIds.length * lineIds.length * 3 * 10;
+    this._gameModel.bet += this._gameModel.betGain;
   }
 }

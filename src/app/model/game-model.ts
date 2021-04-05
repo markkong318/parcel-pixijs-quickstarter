@@ -5,7 +5,7 @@ export class GameModel extends Model {
 
   private _score: number = 0;
   private _scoreGain: number = 0;
-  private _bet: number = 100;
+  private _bet: number = 1000;
   private _betGain: number = 0;
   private _reels: number[][] = [
     [0, 0, 0, 0],

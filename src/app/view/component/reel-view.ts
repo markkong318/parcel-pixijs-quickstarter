@@ -2,10 +2,10 @@ import * as PIXI from 'pixi.js';
 
 import {View} from "../../../framework/view";
 import event from "../../../framework/event";
-import {REEL_WIDTH, SYMBOL_SIZE} from "../../util/env";
+import {LINE_BORDER_COLOR, LINE_COLOR, REEL_WIDTH, SYMBOL_SIZE} from "../../util/env";
 import {backout, lerp, tweenTo} from "../../util/anime";
 import {GameModel} from "../../model/game-model";
-import {EVENT_RENDER_REELS, EVENT_RENDER_SCORE, EVENT_UPDATE_REELS_AFTER} from "../../util/event";
+import {EVENT_RENDER_PREPARE_PLAY, EVENT_RENDER_AFTER_PLAY, EVENT_AFTER_PLAY} from "../../util/event";
 import {
   LINE_COLUMN_1,
   LINE_COLUMN_2,
@@ -89,14 +89,14 @@ export class ReelView extends View {
           const prevY = symbol.y;
           symbol.y = ((reel.position + j) % reel.symbols.length) * SYMBOL_SIZE - SYMBOL_SIZE;
           if (symbol.y < 0 && prevY > (SYMBOL_SIZE * (reel.symbols.length - 1) - SYMBOL_SIZE)) {
-            if (i == 2) {
-              console.log("j: " + j + ",y:" + symbol.y + ", prevY: " +prevY+ ", position:" + reel.position + " , left:" + this._gameModel.rolls[i].length)
-            }
+            // if (i == 2) {
+            //   console.log("j: " + j + ",y:" + symbol.y + ", prevY: " +prevY+ ", position:" + reel.position + " , left:" + this._gameModel.rolls[i].length)
+            // }
 
             symbol.texture = slotTextures[this._gameModel.rolls[i].shift()];
             symbol.scale.x = symbol.scale.y = Math.min(SYMBOL_SIZE / symbol.texture.width, SYMBOL_SIZE / symbol.texture.height);
             symbol.x = Math.round((SYMBOL_SIZE - symbol.width) / 2);
-            console.log(this._gameModel.rolls);
+            // console.log(this._gameModel.rolls);
           }
         }
       }
@@ -128,18 +128,17 @@ export class ReelView extends View {
       }
     });
 
-    event.on(EVENT_RENDER_REELS, () => {
+    event.on(EVENT_RENDER_PREPARE_PLAY, () => {
+      this.renderLine();
       this.renderReels();
     });
 
-    event.on(EVENT_RENDER_SCORE, () => {
-      this.renderScore();
+    event.on(EVENT_RENDER_AFTER_PLAY, () => {
+      this.renderLine();
     })
   }
 
   public renderReels() {
-    console.log('render reels')
-    console.log("this._running:" + this._running)
     if (this._running) {
       return;
     }
@@ -159,12 +158,11 @@ export class ReelView extends View {
   }
 
   public renderReelsComplete() {
-    console.log('renderReelsComplete')
     this._running = false;
-    event.emit(EVENT_UPDATE_REELS_AFTER);
+    event.emit(EVENT_AFTER_PLAY);
   }
 
-  public renderScore() {
+  public renderLine() {
     this._graphics.clear()
 
     const lineIds = this._gameModel.lineIds;
@@ -174,71 +172,71 @@ export class ReelView extends View {
 
       switch (lineId) {
         case LINE_ROW_1:
-          this._graphics.lineStyle(7, 0xffffff);
+          this._graphics.lineStyle(7, LINE_BORDER_COLOR);
           this._graphics.moveTo(-1, SYMBOL_SIZE / 2 + 1);
           this._graphics.lineTo(REEL_WIDTH  * 3 - 1, SYMBOL_SIZE / 2 + 1);
 
-          this._graphics.lineStyle(5, 0xfa5c5c);
+          this._graphics.lineStyle(5, LINE_COLOR);
           this._graphics.moveTo(0, SYMBOL_SIZE / 2);
           this._graphics.lineTo(REEL_WIDTH  * 3, SYMBOL_SIZE / 2);
           break;
 
         case LINE_ROW_2:
-          this._graphics.lineStyle(7, 0xffffff);
+          this._graphics.lineStyle(7, LINE_BORDER_COLOR);
           this._graphics.moveTo(-1, SYMBOL_SIZE * 3 / 2 + 1);
           this._graphics.lineTo(REEL_WIDTH  * 3 - 1, SYMBOL_SIZE * 3 / 2 + 1);
 
-          this._graphics.lineStyle(5, 0xfa5c5c);
+          this._graphics.lineStyle(5, LINE_COLOR);
           this._graphics.moveTo(0, SYMBOL_SIZE * 3 / 2);
           this._graphics.lineTo(REEL_WIDTH  * 3, SYMBOL_SIZE * 3 / 2);
           break;
 
         case LINE_ROW_3:
-          this._graphics.lineStyle(7, 0xffffff);
+          this._graphics.lineStyle(7, LINE_BORDER_COLOR);
           this._graphics.moveTo(-1, SYMBOL_SIZE * 5 / 2 + 1);
           this._graphics.lineTo(REEL_WIDTH  * 3 - 1, SYMBOL_SIZE * 5 / 2 + 1);
 
-          this._graphics.lineStyle(5, 0xfa5c5c);
+          this._graphics.lineStyle(5, LINE_COLOR);
           this._graphics.moveTo(0, SYMBOL_SIZE * 5 / 2);
           this._graphics.lineTo(REEL_WIDTH  * 3, SYMBOL_SIZE * 5 / 2);
           break;
 
         case LINE_COLUMN_1:
-          this._graphics.lineStyle(7, 0xffffff);
+          this._graphics.lineStyle(7, LINE_BORDER_COLOR);
           this._graphics.moveTo(REEL_WIDTH / 2 - 1, - 1);
           this._graphics.lineTo(REEL_WIDTH / 2 - 1, SYMBOL_SIZE * 3 - 1);
 
-          this._graphics.lineStyle(5, 0xfa5c5c);
+          this._graphics.lineStyle(5, LINE_COLOR);
           this._graphics.moveTo(REEL_WIDTH / 2, 0);
           this._graphics.lineTo(REEL_WIDTH / 2, SYMBOL_SIZE * 3);
           break;
 
         case LINE_COLUMN_2:
-          this._graphics.lineStyle(7, 0xffffff);
+          this._graphics.lineStyle(7, LINE_BORDER_COLOR);
           this._graphics.moveTo(REEL_WIDTH * 3 / 2 - 1, - 1);
           this._graphics.lineTo(REEL_WIDTH * 3 / 2 - 1, SYMBOL_SIZE * 3 - 1);
 
-          this._graphics.lineStyle(5, 0xfa5c5c);
+          this._graphics.lineStyle(5, LINE_COLOR);
           this._graphics.moveTo(REEL_WIDTH * 3 / 2, 0);
           this._graphics.lineTo(REEL_WIDTH * 3 / 2, SYMBOL_SIZE * 3);
           break;
 
         case LINE_COLUMN_3:
-          this._graphics.lineStyle(7, 0xffffff);
+          this._graphics.lineStyle(7, LINE_BORDER_COLOR);
           this._graphics.moveTo(REEL_WIDTH * 5 / 2 - 1, - 1);
           this._graphics.lineTo(REEL_WIDTH * 5 / 2 - 1, SYMBOL_SIZE * 3 - 1);
 
-          this._graphics.lineStyle(5, 0xfa5c5c);
+          this._graphics.lineStyle(5, LINE_COLOR);
           this._graphics.moveTo(REEL_WIDTH * 5 / 2, 0);
           this._graphics.lineTo(REEL_WIDTH * 5 / 2, SYMBOL_SIZE * 3);
           break;
 
         case LINE_DIAGONAL_1:
-          this._graphics.lineStyle(7, 0xffffff);
+          this._graphics.lineStyle(7, LINE_BORDER_COLOR);
           this._graphics.moveTo(- 1, - 1);
           this._graphics.lineTo(REEL_WIDTH * 3 - 1, SYMBOL_SIZE * 3 - 1);
 
-          this._graphics.lineStyle(5, 0xfa5c5c);
+          this._graphics.lineStyle(5, LINE_COLOR);
           this._graphics.moveTo(-1, -1);
           this._graphics.lineTo(REEL_WIDTH * 3 - 1, SYMBOL_SIZE * 3 - 1);
           break;
@@ -248,7 +246,7 @@ export class ReelView extends View {
           this._graphics.moveTo(REEL_WIDTH * 3 - 1, - 1);
           this._graphics.lineTo(-1, SYMBOL_SIZE * 3 - 1);
 
-          this._graphics.lineStyle(5, 0xfa5c5c);
+          this._graphics.lineStyle(5, LINE_COLOR);
           this._graphics.moveTo(REEL_WIDTH * 3 - 1, - 1);
           this._graphics.lineTo(-1, SYMBOL_SIZE * 3 - 1);
           break;
