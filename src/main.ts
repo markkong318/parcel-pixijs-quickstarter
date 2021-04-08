@@ -14,10 +14,16 @@ font.load()
     gsap.registerPlugin(PixiPlugin);
 
     const app = new Application({
-      width: 480, //window.innerWidth,
-      height: 800, //window.innerHeight,
+      width: window.innerWidth,
+      height: window.innerHeight,
+      resizeTo: window
     });
     document.body.appendChild(app.view);
+
+    window.onresize = () => {
+      app.renderer.resize(window.innerWidth, window.innerHeight);
+      app.resizeView();
+    };
   })
 
 

@@ -1,9 +1,5 @@
 import * as PIXI from 'pixi.js';
 import gsap from 'gsap';
-// import PixiPlugin from "gsap/PixiPlugin";
-//
-// PixiPlugin.registerPIXI(PIXI);
-// gsap.registerPlugin(PixiPlugin);
 
 import {View} from "../../../framework/view";
 import event from "../../../framework/event";
@@ -34,9 +30,10 @@ export class BottomView extends View {
     this._playText.anchor.y = 0.5;
     this._playText.x = Math.round(this.vw / 2);
     this._playText.y = Math.round(this._playText.height / 2);
-    this._playText.interactive = true;
-    this._playText.buttonMode = true;
-    this._playText.addListener('pointerdown', () => {
+
+    this._graphics.interactive = true;
+    this._graphics.buttonMode = true;
+    this._graphics.addListener('pointerdown', () => {
       gsap.timeline()
         .clear()
         .to(this._playText,
@@ -55,7 +52,7 @@ export class BottomView extends View {
             scaleY: 1,
           }
         }
-      )
+      );
 
       event.emit(EVENT_CLICK_PLAY);
     });

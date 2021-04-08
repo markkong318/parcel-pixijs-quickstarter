@@ -9,7 +9,6 @@ import {GameView} from "./view/game-view";
 import {GameModel} from "./model/game-model";
 import {GameController} from "./controller/game-controller";
 
-
 export class Application extends PIXI.Application {
   private _gameModel: GameModel;
   private _gameController: GameController;
@@ -43,10 +42,22 @@ export class Application extends PIXI.Application {
     this._gameController = new GameController(this._gameModel);
 
     this._gameView = new GameView(this._gameModel);
-    this._gameView.vw = this.renderer.width;
-    this._gameView.vh = this.renderer.height;
+    this._gameView.vw = 480;
+    this._gameView.vh = 800;
     this._gameView.init();
 
     this.stage.addChild(this._gameView);
+
+    this.resizeView();
+  }
+
+  public resizeView(): void {
+    const scale = Math.min(this.renderer.width / this._gameView.vw, this.renderer.height / this._gameView.vh);
+
+    this._gameView.scale.x = scale;
+    this._gameView.scale.y = scale;
+
+    this._gameView.x = (this.renderer.width - this._gameView.vw * scale) / 2;
+    this._gameView.y = (this.renderer.height - this._gameView.vh * scale) / 2;
   }
 }
