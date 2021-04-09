@@ -26,6 +26,4 @@ font.load()
       app.renderer.resize(window.innerWidth, window.innerHeight);
       app.resizeView();
     };
-  })
-
-
+  });
