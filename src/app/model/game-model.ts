@@ -1,11 +1,12 @@
 import {Model} from "../../framework/model";
+import {INIT_BET} from "../util/env";
 
 export class GameModel extends Model {
   private _playing: boolean = false;
 
   private _score: number = 0;
   private _scoreGain: number = 0;
-  private _bet: number = 1000;
+  private _bet: number = INIT_BET;
   private _betGain: number = 0;
   private _reels: number[][] = [
     [0, 0, 0, 0],

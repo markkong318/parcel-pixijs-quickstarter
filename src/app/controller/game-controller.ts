@@ -7,7 +7,7 @@ import {
   EVENT_RENDER_PREPARE_PLAY,
   EVENT_RENDER_AFTER_PLAY,
   EVENT_PREPARE_PLAY,
-  EVENT_AFTER_PLAY,
+  EVENT_AFTER_PLAY, EVENT_RENDER_GAME_OVER,
 } from "../util/event";
 import {LINE_COLUMN, LINE_DIAGONAL_1, LINE_DIAGONAL_2, LINE_ROW} from "../util/line";
 
@@ -20,9 +20,7 @@ export class GameController extends Controller {
     this._gameModel = gameModel;
 
     event.on(EVENT_CLICK_PLAY, () => {
-      console.log("playing: " + this._gameModel.playing)
-      if (this.isPlaying()) {
-        console.log('playing')
+      if (this.tryPlaying()) {
         return;
       }
       event.emit(EVENT_PREPARE_PLAY);
@@ -43,7 +41,7 @@ export class GameController extends Controller {
     });
   }
 
-  public isPlaying() {
+  public tryPlaying() {
     if (this._gameModel.playing) {
       return true;
     }
@@ -91,6 +89,13 @@ export class GameController extends Controller {
   }
 
   public consumeBet() {
+    if (this._gameModel.bet < ONE_PLAY_BET) {
+      this._gameModel.betGain = this._gameModel.bet;
+      this._gameModel.bet = 0;
+
+      return;
+    }
+
     this._gameModel.bet -= ONE_PLAY_BET;
     this._gameModel.betGain = -ONE_PLAY_BET;
   }
@@ -171,5 +176,9 @@ export class GameController extends Controller {
 
     this._gameModel.betGain = lineIds.length * lineIds.length * 3 * 10;
     this._gameModel.bet += this._gameModel.betGain;
+
+    if (this._gameModel.bet <= 0) {
+      event.emit(EVENT_RENDER_GAME_OVER);
+    }
   }
 }

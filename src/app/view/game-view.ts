@@ -4,13 +4,15 @@ import {TopView} from "./component/top-view";
 import {ReelView} from "./component/reel-view";
 import {SYMBOL_SIZE, REEL_WIDTH} from "../util/env";
 import {GameModel} from "../model/game-model";
+import {GameOverView} from "./component/game-over-view";
 
 export class GameView extends View {
   private _gameModel: GameModel;
 
-  private _topView: TopView
-  private _reelView: ReelView
-  private _bottomView: BottomView
+  private _topView: TopView;
+  private _reelView: ReelView;
+  private _bottomView: BottomView;
+  private _gameOverView: GameOverView;
 
   constructor(gameModel: GameModel) {
     super();
@@ -42,5 +44,13 @@ export class GameView extends View {
     this._bottomView.vh = margin;
     this._bottomView.init();
     this.addChild(this._bottomView);
+
+    this._gameOverView = new GameOverView(this._gameModel);
+    this._gameOverView.x = 0;
+    this._gameOverView.y = 0;
+    this._gameOverView.vw = this.vw;
+    this._gameOverView.vh = this.vh;
+    this._gameOverView.init();
+    this.addChild(this._gameOverView);
   }
 }

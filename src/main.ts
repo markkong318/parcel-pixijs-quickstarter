@@ -8,6 +8,8 @@ import * as PIXI from 'pixi.js';
 var font = new FontFaceObserver('04b03')
 font.load()
   .then(() => {
+    window.PIXI = PIXI;
+
     PIXI.settings.SCALE_MODE = PIXI.SCALE_MODES.NEAREST;
 
     PixiPlugin.registerPIXI(PIXI);
