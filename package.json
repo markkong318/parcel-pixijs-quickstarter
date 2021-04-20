@@ -1,5 +1,5 @@
 {
-  "name": "pixitest",
+  "name": "slot",
   "version": "1.0.0",
   "description": "",
   "scripts": {
@@ -10,14 +10,12 @@
     "clean": "rimraf ./dist ./.cache",
     "deploy": "gh-pages -d dist"
   },
-  "author": "Llorenç Pujol Ferriol",
+  "author": "markkong318",
   "license": "MIT",
   "dependencies": {
-    "eventemitter3": "^3.1.2",
     "fontfaceobserver": "^2.1.0",
     "gsap": "^3.6.1",
-    "pixi.js": "~5.3.3",
-    "sparkles": "^1.0.1"
+    "pixi.js": "~5.3.3"
   },
   "devDependencies": {
     "@types/jest": "~26.0.15",
