@@ -7,11 +7,10 @@ Slot game which is forked from `parcel-pixijs-quickstarter` and apply MVC
 
 ```bash
 # clone the repo.
-# --depth 1 removes all but one .git commit history (Optional).
-git clone --depth 1 https://github.com/llorenspujol/parcel-pixijs-quickstarter.git
+git clone https://github.com/markkong318/slot.git
 
 # go to the repo
-cd parcel-pixijs-quickstarter
+cd slot
 
 # install the dependencies via npm
 npm install
